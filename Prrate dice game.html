@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YoHo! Pirate Dice Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial Black', Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        h1 {
+            text-align: center;
+            color: #8b4513;
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+        }
+
+        .rules {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+
+        .rules h3 {
+            color: #8b4513;
+            margin-bottom: 10px;
+        }
+
+        .player-setup {
+            margin-bottom: 20px;
+        }
+
+        .player-setup input {
+            padding: 10px;
+            font-size: 1em;
+            border: 2px solid #8b4513;
+            border-radius: 5px;
+            margin-right: 10px;
+            width: 200px;
+        }
+
+        .btn {
+            background: #8b4513;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1em;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn:hover {
+            background: #a0522d;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .game-board {
+            display: none;
+        }
+
+        .game-board.active {
+            display: block;
+        }
+
+        .current-player {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .dice-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .die {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border: 3px solid #333;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5em;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .die:hover:not(.locked) {
+            transform: scale(1.1);
+        }
+
+        .die.locked {
+            background: #ffd700;
+            border-color: #ff8c00;
+            cursor: not-allowed;
+        }
+
+        .die.rolling {
+            animation: roll 0.5s ease-in-out;
+        }
+
+        @keyframes roll {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(90deg); }
+            50% { transform: rotate(180deg); }
+            75% { transform: rotate(270deg); }
+        }
+
+        .turn-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .turn-info strong {
+            color: #1976d2;
+            font-size: 1.2em;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .scoreboard {
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .scoreboard h3 {
+            color: #8b4513;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .player-score {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 5px;
+            border-left: 5px solid #8b4513;
+        }
+
+        .player-score.current {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+        }
+
+        .player-score.eliminated {
+            opacity: 0.5;
+            text-decoration: line-through;
+        }
+
+        .winner-banner {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #8b4513;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 2em;
+            margin: 20px 0;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            animation: celebration 1s ease-in-out;
+        }
+
+        @keyframes celebration {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .message {
+            text-align: center;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .message.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .message.danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>⚓ YoHo! ⚓</h1>
+        <p class="subtitle">Pirate Dice Game</p>
+
+        <div class="rules">
+            <h3>📜 How to Play:</h3>
+            <p><strong>Goal:</strong> Be the last pirate standing!</p>
+            <p><strong>Rules:</strong></p>
+            <ul>
+                <li>Roll 8 dice up to 3 times per turn</li>
+                <li>Lock dice showing ⚓ (anchors), 💀 (skulls), or 💎 (diamonds)</li>
+                <li><strong>Anchors:</strong> Safe - keep your points</li>
+                <li><strong>Diamonds:</strong> Score points (100 per diamond)</li>
+                <li><strong>Skulls:</strong> Dangerous! 4+ skulls = lose ALL your points!</li>
+                <li>First to 6000 points wins!</li>
+            </ul>
+        </div>
+
+        <div class="player-setup" id="setup">
+            <input type="text" id="player1" placeholder="Player 1 Name" value="Captain Jack">
+            <input type="text" id="player2" placeholder="Player 2 Name" value="Blackbeard">
+            <button class="btn" onclick="startGame()">⚔️ Start Game</button>
+        </div>
+
+        <div class="game-board" id="gameBoard">
+            <div class="current-player" id="currentPlayer"></div>
+            
+            <div class="turn-info" id="turnInfo">
+                <strong>Rolls Left: 3</strong> | Diamonds: 0 | Anchors: 0 | Skulls: 0
+            </div>
+
+            <div id="message"></div>
+
+            <div class="dice-container" id="diceContainer"></div>
+
+            <div class="controls">
+                <button class="btn" id="rollBtn" onclick="rollDice()">🎲 Roll Dice</button>
+                <button class="btn" id="bankBtn" onclick="bankPoints()" disabled>💰 Bank Points</button>
+                <button class="btn" onclick="endTurn()">➡️ End Turn</button>
+            </div>
+
+            <div class="scoreboard">
+                <h3>🏴‍☠️ Scoreboard</h3>
+                <div id="scoreboard"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const DICE_FACES = ['⚓', '💀', '💎', '🗡️', '🦜', '🍺'];
+        const WINNING_SCORE = 6000;
+        
+        let gameState = {
+            players: [],
+            currentPlayerIndex: 0,
+            rollsLeft: 3,
+            currentDice: [],
+            lockedDice: [],
+            turnDiamonds: 0,
+            turnAnchors: 0,
+            turnSkulls: 0
+        };
+
+        function startGame() {
+            const p1 = document.getElementById('player1').value.trim() || 'Player 1';
+            const p2 = document.getElementById('player2').value.trim() || 'Player 2';
+            
+            gameState.players = [
+                { name: p1, score: 0, eliminated: false },
+                { name: p2, score: 0, eliminated: false }
+            ];
+            
+            document.getElementById('setup').style.display = 'none';
+            document.getElementById('gameBoard').classList.add('active');
+            
+            initializeDice();
+            updateDisplay();
+        }
+
+        function initializeDice() {
+            const container = document.getElementById('diceContainer');
+            container.innerHTML = '';
+            gameState.currentDice = [];
+            gameState.lockedDice = [];
+            
+            for (let i = 0; i < 8; i++) {
+                const die = document.createElement('div');
+                die.className = 'die';
+                die.id = `die-${i}`;
+                die.textContent = '?';
+                die.onclick = () => toggleLock(i);
+                container.appendChild(die);
+                gameState.currentDice.push(null);
+            }
+        }
+
+        function rollDice() {
+            if (gameState.rollsLeft <= 0) return;
+            
+            gameState.rollsLeft--;
+            const diceElements = document.querySelectorAll('.die');
+            
+            diceElements.forEach((die, i) => {
+                if (!gameState.lockedDice[i]) {
+                    die.classList.add('rolling');
+                    setTimeout(() => {
+                        const face = DICE_FACES[Math.floor(Math.random() * DICE_FACES.length)];
+                        gameState.currentDice[i] = face;
+                        die.textContent = face;
+                        die.classList.remove('rolling');
+                        
+                        // Auto-lock special dice
+                        if (face === '⚓' || face === '💀' || face === '💎') {
+                            gameState.lockedDice[i] = true;
+                            die.classList.add('locked');
+                            
+                            if (face === '💎') gameState.turnDiamonds++;
+                            if (face === '⚓') gameState.turnAnchors++;
+                            if (face === '💀') gameState.turnSkulls++;
+                        }
+                    }, 500);
+                }
+            });
+
+            setTimeout(() => {
+                checkTurnStatus();
+                updateDisplay();
+            }, 600);
+        }
+
+        function toggleLock(index) {
+            if (gameState.rollsLeft === 3) return; // Can't lock before first roll
+            
+            const die = document.getElementById(`die-${index}`);
+            const face = gameState.currentDice[index];
+            
+            // Can only toggle non-special dice
+            if (face && face !== '⚓' && face !== '💀' && face !== '💎') {
+                gameState.lockedDice[index] = !gameState.lockedDice[index];
+                die.classList.toggle('locked');
+            }
+        }
+
+        function checkTurnStatus() {
+            const msg = document.getElementById('message');
+            msg.innerHTML = '';
+            
+            // Check for skull death
+            if (gameState.turnSkulls >= 4) {
+                msg.innerHTML = '<div class="message danger">💀 SKULL ISLAND! You lose ALL your points! 💀</div>';
+                setTimeout(() => {
+                    gameState.players[gameState.currentPlayerIndex].score = 0;
+                    endTurn();
+                }, 2000);
+                document.getElementById('rollBtn').disabled = true;
+                document.getElementById('bankBtn').disabled = true;
+                return;
+            }
+            
+            // Check for no rolls left
+            if (gameState.rollsLeft === 0) {
+                msg.innerHTML = '<div class="message warning">No rolls left! Bank your points or end turn.</div>';
+                document.getElementById('rollBtn').disabled = true;
+                document.getElementById('bankBtn').disabled = false;
+            } else {
+                document.getElementById('rollBtn').disabled = false;
+                document.getElementById('bankBtn').disabled = gameState.turnDiamonds === 0;
+            }
+        }
+
+        function bankPoints() {
+            const points = gameState.turnDiamonds * 100;
+            gameState.players[gameState.currentPlayerIndex].score += points;
+            
+            const msg = document.getElementById('message');
+            msg.innerHTML = `<div class="message success">💰 Banked ${points} points! 💰</div>`;
+            
+            setTimeout(() => {
+                if (gameState.players[gameState.currentPlayerIndex].score >= WINNING_SCORE) {
+                    endGame();
+                } else {
+                    endTurn();
+                }
+            }, 1500);
+        }
+
+        function endTurn() {
+            // Move to next player
+            do {
+                gameState.currentPlayerIndex = (gameState.currentPlayerIndex + 1) % gameState.players.length;
+            } while (gameState.players[gameState.currentPlayerIndex].eliminated);
+            
+            // Reset turn state
+            gameState.rollsLeft = 3;
+            gameState.turnDiamonds = 0;
+            gameState.turnAnchors = 0;
+            gameState.turnSkulls = 0;
+            
+            initializeDice();
+            updateDisplay();
+            
+            document.getElementById('message').innerHTML = '';
+            document.getElementById('rollBtn').disabled = false;
+            document.getElementById('bankBtn').disabled = true;
+        }
+
+        function updateDisplay() {
+            const current = gameState.players[gameState.currentPlayerIndex];
+            document.getElementById('currentPlayer').textContent = `${current.name}'s Turn`;
+            
+            document.getElementById('turnInfo').innerHTML = `
+                <strong>Rolls Left: ${gameState.rollsLeft}</strong> | 
+                💎 Diamonds: ${gameState.turnDiamonds} | 
+                ⚓ Anchors: ${gameState.turnAnchors} | 
+                💀 Skulls: ${gameState.turnSkulls}
+            `;
+            
+            const scoreboard = document.getElementById('scoreboard');
+            scoreboard.innerHTML = gameState.players.map((p, i) => `
+                <div class="player-score ${i === gameState.currentPlayerIndex ? 'current' : ''} ${p.eliminated ? 'eliminated' : ''}">
+                    <span>${p.name}</span>
+                    <span><strong>${p.score}</strong> points</span>
+                </div>
+            `).join('');
+        }
+
+        function endGame() {
+            const winner = gameState.players[gameState.currentPlayerIndex];
+            const msg = document.getElementById('message');
+            msg.innerHTML = `
+                <div class="winner-banner">
+                    🏆 ${winner.name} WINS! 🏆<br>
+                    <span style="font-size: 0.6em;">Final Score: ${winner.score} points</span>
+                </div>
+            `;
+            
+            document.getElementById('rollBtn').disabled = true;
+            document.getElementById('bankBtn').disabled = true;
+            document.querySelectorAll('.controls button').forEach(btn => btn.disabled = true);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hypixel Game Hub</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            padding: 20px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 3px solid gold;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+            color: #FFD700;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 10px;
+        }
+
+        .stat {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 8px 20px;
+            border-radius: 5px;
+        }
+
+        .game-selector {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 40px;
+            flex: 1;
+            align-items: center;
+        }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 30px;
+            width: 200px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .game-card:hover {
+            transform: translateY(-10px) scale(1.05);
+            background: rgba(255, 255, 255, 0.25);
+            border-color: gold;
+            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.3);
+        }
+
+        .game-card h3 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+            color: #FFD700;
+        }
+
+        .game-screen {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+        }
+
+        .game-screen.active {
+            display: flex;
+        }
+
+        .game-header {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-btn {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+        }
+
+        .back-btn:hover {
+            background: #cc0000;
+        }
+
+        .game-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        /* Bed Wars Game */
+        .bedwars-grid {
+            display: grid;
+            grid-template-columns: repeat(20, 30px);
+            grid-template-rows: repeat(15, 30px);
+            gap: 1px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 0 auto;
+            width: fit-content;
+        }
+
+        .cell {
+            width: 30px;
+            height: 30px;
+            background: #87CEEB;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .cell.block {
+            background: #8B4513;
+        }
+
+        .cell.bed {
+            background: #FF6B6B;
+        }
+
+        .cell.player {
+            background: #FFD700;
+            border-radius: 50%;
+        }
+
+        .cell.enemy {
+            background: #FF4444;
+            border-radius: 50%;
+        }
+
+        /* SkyWars Game */
+        .skywars-arena {
+            position: relative;
+            width: 600px;
+            height: 400px;
+            margin: 0 auto;
+            background: linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 100%);
+            border: 3px solid #FFD700;
+            border-radius: 10px;
+        }
+
+        .island {
+            position: absolute;
+            background: #8B4513;
+            border: 2px solid #654321;
+            border-radius: 10px;
+        }
+
+        .player-sky {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: #FFD700;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .chest {
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            background: #CD853F;
+            border: 2px solid #8B4513;
+        }
+
+        /* Build Battle */
+        .build-canvas {
+            display: grid;
+            grid-template-columns: repeat(16, 30px);
+            grid-template-rows: repeat(16, 30px);
+            gap: 1px;
+            margin: 20px auto;
+            width: fit-content;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .build-cell {
+            width: 30px;
+            height: 30px;
+            background: #E0E0E0;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+        }
+
+        .color-palette {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px;
+        }
+
+        .color-btn {
+            width: 40px;
+            height: 40px;
+            border: 3px solid white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .color-btn.active {
+            border-color: gold;
+            box-shadow: 0 0 10px gold;
+        }
+
+        /* Murder Mystery */
+        .mm-game {
+            text-align: center;
+        }
+
+        .player-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px;
+        }
+
+        .mm-player {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .mm-player:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .mm-player.dead {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .controls {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px auto;
+            width: fit-content;
+        }
+
+        .btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+
+        .btn:hover {
+            background: #45a049;
+        }
+
+        .btn.red {
+            background: #f44336;
+        }
+
+        .btn.red:hover {
+            background: #da190b;
+        }
+
+        .message {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px auto;
+            max-width: 600px;
+            text-align: center;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Main Menu -->
+        <div id="mainMenu" class="game-screen active">
+            <div class="header">
+                <h1>🎮 HYPIXEL GAME HUB 🎮</h1>
+                <div class="stats">
+                    <div class="stat">⭐ Level: <span id="level">1</span></div>
+                    <div class="stat">💰 Coins: <span id="coins">1000</span></div>
+                    <div class="stat">🏆 Wins: <span id="wins">0</span></div>
+                </div>
+            </div>
+            <div class="game-selector">
+                <div class="game-card" onclick="startGame('bedwars')">
+                    <h3>🛏️ Bed Wars</h3>
+                    <p>Protect your bed and destroy enemy beds!</p>
+                </div>
+                <div class="game-card" onclick="startGame('skywars')">
+                    <h3>☁️ SkyWars</h3>
+                    <p>Battle on floating islands!</p>
+                </div>
+                <div class="game-card" onclick="startGame('buildbattle')">
+                    <h3>🏗️ Build Battle</h3>
+                    <p>Build the best creation!</p>
+                </div>
+                <div class="game-card" onclick="startGame('murder')">
+                    <h3>🔪 Murder Mystery</h3>
+                    <p>Find the murderer!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bed Wars -->
+        <div id="bedwars" class="game-screen">
+            <div class="game-header">
+                <button class="back-btn" onclick="backToMenu()">← Back to Lobby</button>
+                <h2>🛏️ BED WARS</h2>
+                <div class="stat">❤️ Health: <span id="bw-health">100</span></div>
+            </div>
+            <div class="game-content">
+                <div class="message" id="bw-message">Use WASD to move. Protect your bed (red square)!</div>
+                <div class="bedwars-grid" id="bedwars-grid"></div>
+                <div class="controls">
+                    <div>Press WASD to move | SPACE to place block | E to attack</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SkyWars -->
+        <div id="skywars" class="game-screen">
+            <div class="game-header">
+                <button class="back-btn" onclick="backToMenu()">← Back to Lobby</button>
+                <h2>☁️ SKYWARS</h2>
+                <div class="stat">Players Left: <span id="sw-players">8</span></div>
+            </div>
+            <div class="game-content">
+                <div class="message" id="sw-message">Collect chests and eliminate opponents!</div>
+                <div class="skywars-arena" id="skywars-arena"></div>
+                <div class="controls">
+                    <div>Arrow keys to move | Click to collect chest | Spacebar to attack nearby</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Build Battle -->
+        <div id="buildbattle" class="game-screen">
+            <div class="game-header">
+                <button class="back-btn" onclick="backToMenu()">← Back to Lobby</button>
+                <h2>🏗️ BUILD BATTLE</h2>
+                <div class="stat">Time: <span id="bb-time">180</span>s</div>
+            </div>
+            <div class="game-content">
+                <div class="message" id="bb-theme">Theme: CASTLE</div>
+                <div class="color-palette" id="color-palette"></div>
+                <div class="build-canvas" id="build-canvas"></div>
+                <div class="controls">
+                    <button class="btn" onclick="clearCanvas()">Clear Canvas</button>
+                    <button class="btn" onclick="submitBuild()">Submit Build</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Murder Mystery -->
+        <div id="murder" class="game-screen">
+            <div class="game-header">
+                <button class="back-btn" onclick="backToMenu()">← Back to Lobby</button>
+                <h2>🔪 MURDER MYSTERY</h2>
+                <div class="stat">Role: <span id="mm-role">Innocent</span></div>
+            </div>
+            <div class="game-content">
+                <div class="message" id="mm-message">Find the murderer before they eliminate everyone!</div>
+                <div class="player-list" id="mm-players"></div>
+                <div class="controls">
+                    <button class="btn" onclick="collectGun()">🔫 Collect Gun Piece</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let gameData = {
+            coins: 1000,
+            level: 1,
+            wins: 0
+        };
+
+        let currentGame = null;
+
+        // Game state
+        let bedwarsState = {
+            playerPos: {x: 1, y: 7},
+            health: 100,
+            bed: {x: 1, y: 7},
+            enemies: [{x: 18, y: 7}],
+            blocks: []
+        };
+
+        let skywarsState = {
+            playerPos: {x: 285, y: 185},
+            players: 8,
+            chests: []
+        };
+
+        let buildBattleState = {
+            selectedColor: '#FF0000',
+            time: 180,
+            timer: null
+        };
+
+        let murderState = {
+            role: 'Innocent',
+            players: [],
+            murderer: null,
+            detective: null,
+            gunPieces: 0,
+            dead: []
+        };
+
+        function startGame(game) {
+            document.getElementById('mainMenu').classList.remove('active');
+            document.getElementById(game).classList.add('active');
+            currentGame = game;
+
+            if (game === 'bedwars') initBedWars();
+            if (game === 'skywars') initSkyWars();
+            if (game === 'buildbattle') initBuildBattle();
+            if (game === 'murder') initMurderMystery();
+        }
+
+        function backToMenu() {
+            document.querySelectorAll('.game-screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById('mainMenu').classList.add('active');
+            
+            if (buildBattleState.timer) {
+                clearInterval(buildBattleState.timer);
+            }
+            
+            currentGame = null;
+        }
+
+        // BED WARS
+        function initBedWars() {
+            const grid = document.getElementById('bedwars-grid');
+            grid.innerHTML = '';
+            
+            for (let y = 0; y < 15; y++) {
+                for (let x = 0; x < 20; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.x = x;
+                    cell.dataset.y = y;
+                    
+                    if (x === 1 && y === 7) {
+                        cell.classList.add('bed');
+                    }
+                    if (x === 1 && y === 6) {
+                        cell.classList.add('player');
+                    }
+                    if (x === 18 && y === 7) {
+                        cell.classList.add('enemy');
+                    }
+                    
+                    grid.appendChild(cell);
+                }
+            }
+
+            document.addEventListener('keydown', handleBedWarsMove);
+        }
+
+        function handleBedWarsMove(e) {
+            if (currentGame !== 'bedwars') return;
+            
+            const key = e.key.toLowerCase();
+            let newX = bedwarsState.playerPos.x;
+            let newY = bedwarsState.playerPos.y;
+
+            if (key === 'w') newY--;
+            if (key === 's') newY++;
+            if (key === 'a') newX--;
+            if (key === 'd') newX++;
+
+            if (newX >= 0 && newX < 20 && newY >= 0 && newY < 15) {
+                updateBedWarsGrid(newX, newY);
+                bedwarsState.playerPos = {x: newX, y: newY};
+            }
+
+            if (key === ' ') {
+                placeBlock();
+            }
+
+            if (key === 'e') {
+                attackEnemy();
+            }
+        }
+
+        function updateBedWarsGrid(newX, newY) {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                const x = parseInt(cell.dataset.x);
+                const y = parseInt(cell.dataset.y);
+                
+                if (cell.classList.contains('player')) {
+                    cell.classList.remove('player');
+                }
+                
+                if (x === newX && y === newY) {
+                    cell.classList.add('player');
+                }
+            });
+        }
+
+        function placeBlock() {
+            const frontX = bedwarsState.playerPos.x + 1;
+            const frontY = bedwarsState.playerPos.y;
+            
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                if (parseInt(cell.dataset.x) === frontX && parseInt(cell.dataset.y) === frontY) {
+                    cell.classList.add('block');
+                }
+            });
+        }
+
+        function attackEnemy() {
+            const playerX = bedwarsState.playerPos.x;
+            const playerY = bedwarsState.playerPos.y;
+            
+            bedwarsState.enemies = bedwarsState.enemies.filter(enemy => {
+                const dist = Math.abs(enemy.x - playerX) + Math.abs(enemy.y - playerY);
+                if (dist <= 2) {
+                    document.getElementById('bw-message').textContent = 'Enemy eliminated! +50 coins';
+                    gameData.coins += 50;
+                    updateStats();
+                    return false;
+                }
+                return true;
+            });
+            
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                cell.classList.remove('enemy');
+            });
+        }
+
+        // SKYWARS
+        function initSkyWars() {
+            const arena = document.getElementById('skywars-arena');
+            arena.innerHTML = '';
+
+            const islands = [
+                {x: 50, y: 50, w: 80, h: 80},
+                {x: 470, y: 50, w: 80, h: 80},
+                {x: 50, y: 270, w: 80, h: 80},
+                {x: 470, y: 270, w: 80, h: 80},
+                {x: 235, y: 160, w: 130, h: 80}
+            ];
+
+            islands.forEach(island => {
+                const div = document.createElement('div');
+                div.className = 'island';
+                div.style.left = island.x + 'px';
+                div.style.top = island.y + 'px';
+                div.style.width = island.w + 'px';
+                div.style.height = island.h + 'px';
+                arena.appendChild(div);
+            });
+
+            [65, 505, 65, 505, 270].forEach((x, i) => {
+                const chest = document.createElement('div');
+                chest.className = 'chest';
+                chest.style.left = x + 'px';
+                chest.style.top = [65, 65, 285, 285, 175][i] + 'px';
+                chest.onclick = () => collectChest(chest);
+                arena.appendChild(chest);
+            });
+
+            const player = document.createElement('div');
+            player.className = 'player-sky';
+            player.id = 'sw-player';
+            player.style.left = skywarsState.playerPos.x + 'px';
+            player.style.top = skywarsState.playerPos.y + 'px';
+            arena.appendChild(player);
+
+            document.addEventListener('keydown', handleSkyWarsMove);
+        }
+
+        function handleSkyWarsMove(e) {
+            if (currentGame !== 'skywars') return;
+            
+            const speed = 15;
+            const player = document.getElementById('sw-player');
+            
+            if (e.key === 'ArrowLeft') skywarsState.playerPos.x -= speed;
+            if (e.key === 'ArrowRight') skywarsState.playerPos.x += speed;
+            if (e.key === 'ArrowUp') skywarsState.playerPos.y -= speed;
+            if (e.key === 'ArrowDown') skywarsState.playerPos.y += speed;
+
+            skywarsState.playerPos.x = Math.max(0, Math.min(570, skywarsState.playerPos.x));
+            skywarsState.playerPos.y = Math.max(0, Math.min(370, skywarsState.playerPos.y));
+
+            player.style.left = skywarsState.playerPos.x + 'px';
+            player.style.top = skywarsState.playerPos.y + 'px';
+
+            if (e.key === ' ') {
+                if (Math.random() < 0.3 && skywarsState.players > 1) {
+                    skywarsState.players--;
+                    document.getElementById('sw-players').textContent = skywarsState.players;
+                    document.getElementById('sw-message').textContent = 'Eliminated a player! +100 coins';
+                    gameData.coins += 100;
+                    updateStats();
+                    
+                    if (skywarsState.players === 1) {
+                        document.getElementById('sw-message').textContent = 'VICTORY! You won SkyWars! +500 coins';
+                        gameData.coins += 500;
+                        gameData.wins++;
+                        updateStats();
+                    }
+                }
+            }
+        }
+
+        function collectChest(chest) {
+            chest.remove();
+            gameData.coins += 50;
+            updateStats();
+            document.getElementById('sw-message').textContent = 'Chest collected! +50 coins';
+        }
+
+        // BUILD BATTLE
+        function initBuildBattle() {
+            const themes = ['CASTLE', 'DRAGON', 'HOUSE', 'TREE', 'BOAT', 'SWORD'];
+            const theme = themes[Math.floor(Math.random() * themes.length)];
+            document.getElementById('bb-theme').textContent = 'Theme: ' + theme;
+
+            const canvas = document.getElementById('build-canvas');
+            canvas.innerHTML = '';
+            
+            for (let i = 0; i < 256; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'build-cell';
+                cell.onclick = () => paintCell(cell);
+                canvas.appendChild(cell);
+            }
+
+            const palette = document.getElementById('color-palette');
+            palette.innerHTML = '';
+            const colors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', 
+                           '#FFA500', '#800080', '#8B4513', '#000000', '#FFFFFF', '#808080'];
+            
+            colors.forEach((color, i) => {
+                const btn = document.createElement('div');
+                btn.className = 'color-btn' + (i === 0 ? ' active' : '');
+                btn.style.background = color;
+                btn.onclick = () => selectColor(color, btn);
+                palette.appendChild(btn);
+            });
+
+            buildBattleState.time = 180;
+            buildBattleState.timer = setInterval(() => {
+                buildBattleState.time--;
+                document.getElementById('bb-time').textContent = buildBattleState.time;
+                if (buildBattleState.time <= 0) {
+                    clearInterval(buildBattleState.timer);
+                    submitBuild();
+                }
+            }, 1000);
+        }
+
+        function selectColor(color, btn) {
+            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            buildBattleState.selectedColor = color;
+        }
+
+        function paintCell(cell) {
+            cell.style.background = buildBattleState.selectedColor;
+        }
+
+        function clearCanvas() {
+            document.querySelectorAll('.build-cell').forEach(cell => {
+                cell.style.background = '#E0E0E0';
+            });
+        }
+
+        function submitBuild() {
+            clearInterval(buildBattleState.timer);
+            const score = Math.floor(Math.random() * 5) + 1;
+            const rewards = [50, 100, 150, 250, 500];
+            gameData.coins += rewards[score - 1];
+            if (score >= 4) gameData.wins++;
+            updateStats();
+            document.getElementById('bb-theme').textContent = `You got ${score} stars! +${rewards[score - 1]} coins`;
+        }
+
+        // MURDER MYSTERY
+        function initMurderMystery() {
+            const names = ['Steve', 'Alex', 'Herobrine', 'Notch', 'Jeb', 'Dream', 'George', 'Sapnap'];
+            murderState.players = names.map(name => ({name, alive: true}));
+            
+            murderState.murderer = Math.floor(Math.random() * 8);
+            murderState.detective = Math.floor(Math.random() * 8);
+            while (murderState.detective === murderState.murderer) {
+                murderState.detective = Math.floor(Math.random() * 8);
+            }
+            
+            murderState.role = murderState.murderer === 0 ? 'Murderer' : 
+                              (murderState.detective === 0 ? 'Detective' : 'Innocent');
+            
+            document.getElementById('mm-role').textContent = murderState.role;
+            murderState.gunPieces = 0;
+            murderState.dead = [];
+
+            renderMMPlayers();
+
+            setTimeout(() => {
+                if (murderState.role === 'Murderer') {
+                    setInterval(aiKill, 3000);
+                }
+            }, 5000);
+        }
+
+        function renderMMPlayers() {
+            const container = document.getElementById('mm-players');
+            container.innerHTML = '';
+            
+            murderState.players.forEach((player, i) => {
+                const div = document.createElement('div');
+                div.className = 'mm-player' + (!player.alive ? ' dead' : '');
+                div.innerHTML = `<h3>${player.name}</h3><p>${player.alive ? '✅ Alive' : '❌ Dead'}</p>`;
+                
+                if (player.alive && murderState.role !== 'Murderer' && i !== 0) {
+                    div.onclick = () => accusePlayer(i);
+                } else if (player.alive && murderState.role === 'Murderer' && i !== 0) {
+                    div.onclick = () => killPlayer(i);
+                }
+                
+                container.appendChild(div);
+            });
+        }
+
+        function accusePlayer(index) {
+            if (index === murderState.murderer) {
+                document.getElementById('mm-message').textContent = 'Correct! You found the murderer! +300 coins';
+                gameData.coins += 300;
+                gameData.wins++;
+                updateStats();
+            } else {
+                document.getElementById('mm-message').textContent = 'Wrong! You accused an innocent!';
+                murderState.players[0].alive = false;
+                renderMMPlayers();
+            }
+        }
+
+        function killPlayer(index) {
+            if (murderState.role === 'Murderer' && index !== 0) {
+                murderState.players[index].alive = false;
+                gameData.coins += 50;
+                updateStats();
+                renderMMPlayers();
+                
+                const alive = murderState.players.filter(p => p.alive).length;
+                if (alive <= 2) {
+                    document.getElementById('mm-message').textContent = 'Murderer wins! +500 coins';
+                    gameData.coins += 500;
+                    gameData.wins++;
+                    updateStats();
+                }
+            }
+        }
+
+        function aiKill() {
+            if (currentGame !== 'murder') return;
+            const alive = murderState.players.map((p, i) => p.alive && i !== murderState.murderer ? i : -1).filter(i => i >= 0);
+            if (alive.length > 1) {
+                const target = alive[Math.floor(Math.random() * alive.length)];
+                murderState.players[target].alive = false;
+                if (target === 0) {
+                    document.getElementById('mm-message').textContent = 'You were killed by the murderer!';
+                } else {
+                    document.getElementById('mm-message').textContent = murderState.players[target].name + ' was eliminated!';
+                }
+                renderMMPlayers();
+                
+                const aliveCount = murderState.players.filter(p => p.alive).length;
+                if (aliveCount <= 2 && murderState.players[murderState.murderer].alive) {
+                    document.getElementById('mm-message').textContent = 'Murderer wins! Better luck next time!';
+                }
+            }
+        }
+
+        function collectGun() {
+            if (murderState.role !== 'Murderer') {
+                murderState.gunPieces++;
+                document.getElementById('mm-message').textContent = `Gun pieces: ${murderState.gunPieces}/5`;
+                if (murderState.gunPieces >= 5) {
+                    document.getElementById('mm-message').textContent = 'Gun collected! Click a player to shoot!';
+                    murderState.role = 'Detective';
+                    document.getElementById('mm-role').textContent = 'Detective';
+                }
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('coins').textContent = gameData.coins;
+            document.getElementById('level').textContent = gameData.level;
+            document.getElementById('wins').textContent = gameData.wins;
+        }
+
+        updateStats();
+    </script>
+</body>
+</html>
