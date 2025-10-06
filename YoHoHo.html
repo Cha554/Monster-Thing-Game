@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YoHoHo.io - Enhanced Pirate Battle</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2980, #26d0ce);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            background: #0a3d62;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+        }
+        
+        #ocean {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #0a3d62;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(41, 171, 226, 0.2) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(41, 171, 226, 0.2) 0%, transparent 20%),
+                radial-gradient(circle at 50% 50%, rgba(41, 171, 226, 0.15) 0%, transparent 30%);
+            background-size: 200% 200%;
+            animation: oceanWave 10s infinite linear;
+        }
+        
+        @keyframes oceanWave {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 200% 200%; }
+        }
+        
+        #player {
+            position: absolute;
+            width: 60px;
+            height: 40px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 40"><path d="M10,30 L50,30 L45,10 L15,10 Z" fill="%238B4513"/><rect x="25" y="5" width="10" height="10" fill="%23C41E3A"/><circle cx="30" cy="10" r="3" fill="%23FFD700"/></svg>');
+            z-index: 10;
+            transition: transform 0.1s;
+        }
+        
+        .enemy {
+            position: absolute;
+            width: 50px;
+            height: 35px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 35"><path d="M8,25 L42,25 L38,8 L12,8 Z" fill="%23A52A2A"/><rect x="20" y="3" width="10" height="8" fill="%23800000"/><circle cx="25" cy="8" r="2.5" fill="%23FF0000"/></svg>');
+            z-index: 9;
+        }
+        
+        .cannonball {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #333;
+            border-radius: 50%;
+            z-index: 8;
+        }
+        
+        .treasure {
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 25 25"><rect x="5" y="10" width="15" height="10" rx="2" fill="%23DAA520"/><circle cx="12.5" cy="15" r="3" fill="%23FFD700"/></svg>');
+            z-index: 7;
+        }
+        
+        #ui {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            z-index: 20;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px 15px;
+            border-radius: 10px;
+            display: flex;
+            gap: 20px;
+        }
+        
+        .ui-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        #health-bar {
+            width: 200px;
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        #health-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #ff0000, #00ff00);
+            transition: width 0.3s;
+        }
+        
+        #start-screen, #game-over {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 30;
+            text-align: center;
+        }
+        
+        #game-over {
+            display: none;
+        }
+        
+        h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #f1c40f;
+            text-shadow: 0 0 10px rgba(241, 196, 15, 0.7);
+        }
+        
+        h2 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            color: #e74c3c;
+        }
+        
+        p {
+            font-size: 18px;
+            max-width: 80%;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+        
+        button {
+            background: #e67e22;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            box-shadow: 0 4px 0 #d35400;
+        }
+        
+        button:hover {
+            background: #f39c12;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #d35400;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .key {
+            background: #34495e;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        #score-display {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .instructions {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            max-width: 80%;
+        }
+        
+        #enemy-count {
+            font-size: 18px;
+            color: #e74c3c;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="ocean"></div>
+        <div id="player"></div>
+        
+        <div id="ui">
+            <div class="ui-item">
+                <span>HEALTH:</span>
+                <div id="health-bar">
+                    <div id="health-fill"></div>
+                </div>
+            </div>
+            <div class="ui-item">
+                <span>SCORE:</span>
+                <div id="score-display">0</div>
+            </div>
+            <div class="ui-item">
+                <span>ENEMIES:</span>
+                <div id="enemy-count">0</div>
+            </div>
+        </div>
+        
+        <div id="start-screen">
+            <h1>YoHoHo.io</h1>
+            <p>Command your pirate ship through treacherous waters! Collect treasure, avoid enemy ships, and become the ultimate sea captain!</p>
+            
+            <div class="controls">
+                <div class="key">W</div>
+                <div class="key">A</div>
+                <div class="key">S</div>
+                <div class="key">D</div>
+                <span>to move</span>
+            </div>
+            <div class="controls">
+                <div class="key">SPACE</div>
+                <span>to fire cannons</span>
+            </div>
+            
+            <button id="start-button">START ADVENTURE</button>
+            
+            <div class="instructions">
+                <p>Collect treasure to increase your score. Avoid enemy ships or destroy them with your cannons. Your health decreases when hit by enemies.</p>
+                <p><strong>New!</strong> More enemy ships will surround you. Stay alert!</p>
+            </div>
+        </div>
+        
+        <div id="game-over">
+            <h2>GAME OVER</h2>
+            <p>Your ship has been sunk!</p>
+            <p>Final Score: <span id="final-score">0</span></p>
+            <button id="restart-button">SAIL AGAIN</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Game elements
+            const gameContainer = document.getElementById('game-container');
+            const player = document.getElementById('player');
+            const healthFill = document.getElementById('health-fill');
+            const scoreDisplay = document.getElementById('score-display');
+            const enemyCountDisplay = document.getElementById('enemy-count');
+            const startScreen = document.getElementById('start-screen');
+            const gameOverScreen = document.getElementById('game-over');
+            const startButton = document.getElementById('start-button');
+            const restartButton = document.getElementById('restart-button');
+            const finalScoreDisplay = document.getElementById('final-score');
+            
+            // Game state
+            let gameRunning = false;
+            let playerX = 400;
+            let playerY = 300;
+            let playerHealth = 100;
+            let score = 0;
+            let keys = {};
+            let cannonballs = [];
+            let enemies = [];
+            let treasures = [];
+            let enemySpawnTimer = 0;
+            let treasureSpawnTimer = 0;
+            
+            // Set initial player position
+            player.style.left = playerX + 'px';
+            player.style.top = playerY + 'px';
+            
+            // Event listeners
+            startButton.addEventListener('click', startGame);
+            restartButton.addEventListener('click', startGame);
+            
+            document.addEventListener('keydown', (e) => {
+                keys[e.key] = true;
+            });
+            
+            document.addEventListener('keyup', (e) => {
+                keys[e.key] = false;
+            });
+            
+            // Start the game
+            function startGame() {
+                gameRunning = true;
+                startScreen.style.display = 'none';
+                gameOverScreen.style.display = 'none';
+                
+                // Reset game state
+                playerX = 400;
+                playerY = 300;
+                playerHealth = 100;
+                score = 0;
+                cannonballs = [];
+                enemies = [];
+                treasures = [];
+                
+                // Clear existing elements
+                document.querySelectorAll('.cannonball, .enemy, .treasure').forEach(el => el.remove());
+                
+                // Update UI
+                updateHealthBar();
+                scoreDisplay.textContent = score;
+                enemyCountDisplay.textContent = enemies.length;
+                
+                // Start game loop
+                gameLoop();
+            }
+            
+            function gameLoop() {
+                if (!gameRunning) return;
+                
+                // Move player
+                movePlayer();
+                
+                // Move cannonballs
+                moveCannonballs();
+                
+                // Spawn enemies more frequently
+                enemySpawnTimer++;
+                if (enemySpawnTimer > 30) { // Every half second at 60fps (more enemies!)
+                    spawnEnemy();
+                    enemySpawnTimer = 0;
+                }
+                
+                // Move enemies
+                moveEnemies();
+                
+                // Spawn treasures
+                treasureSpawnTimer++;
+                if (treasureSpawnTimer > 120) { // Every 2 seconds
+                    spawnTreasure();
+                    treasureSpawnTimer = 0;
+                }
+                
+                // Check collisions
+                checkCollisions();
+                
+                // Update UI
+                scoreDisplay.textContent = score;
+                enemyCountDisplay.textContent = enemies.length;
+                
+                // Continue game loop
+                requestAnimationFrame(gameLoop);
+            }
+            
+            function movePlayer() {
+                const speed = 5;
+                
+                if (keys['w'] || keys['W']) playerY = Math.max(0, playerY - speed);
+                if (keys['s'] || keys['S']) playerY = Math.min(560, playerY + speed);
+                if (keys['a'] || keys['A']) playerX = Math.max(0, playerX - speed);
+                if (keys['d'] || keys['D']) playerX = Math.min(740, playerX + speed);
+                
+                // Fire cannon with spacebar
+                if (keys[' ']) {
+                    fireCannon();
+                    keys[' '] = false; // Prevent continuous firing
+                }
+                
+                player.style.left = playerX + 'px';
+                player.style.top = playerY + 'px';
+            }
+            
+            function fireCannon() {
+                const cannonball = document.createElement('div');
+                cannonball.className = 'cannonball';
+                cannonball.style.left = (playerX + 30) + 'px';
+                cannonball.style.top = (playerY + 20) + 'px';
+                gameContainer.appendChild(cannonball);
+                
+                cannonballs.push({
+                    element: cannonball,
+                    x: playerX + 30,
+                    y: playerY + 20,
+                    dx: 0,
+                    dy: -8
+                });
+            }
+            
+            function moveCannonballs() {
+                for (let i = cannonballs.length - 1; i >= 0; i--) {
+                    const ball = cannonballs[i];
+                    ball.x += ball.dx;
+                    ball.y += ball.dy;
+                    ball.element.style.left = ball.x + 'px';
+                    ball.element.style.top = ball.y + 'px';
+                    
+                    // Remove if out of bounds
+                    if (ball.y < -10) {
+                        ball.element.remove();
+                        cannonballs.splice(i, 1);
+                    }
+                }
+            }
+            
+            function spawnEnemy() {
+                const enemy = document.createElement('div');
+                enemy.className = 'enemy';
+                
+                // Random position on edges
+                let x, y;
+                if (Math.random() > 0.5) {
+                    // From left or right
+                    x = Math.random() > 0.5 ? -50 : 800;
+                    y = Math.random() * 550;
+                } else {
+                    // From top or bottom
+                    x = Math.random() * 750;
+                    y = Math.random() > 0.5 ? -50 : 600;
+                }
+                
+                enemy.style.left = x + 'px';
+                enemy.style.top = y + 'px';
+                gameContainer.appendChild(enemy);
+                
+                // Enhanced enemy AI - different behaviors
+                const enemyType = Math.floor(Math.random() * 3);
+                let speed = 0.005;
+                
+                // Different enemy types with different behaviors
+                switch(enemyType) {
+                    case 0: // Direct follower
+                        enemies.push({
+                            element: enemy,
+                            x: x,
+                            y: y,
+                            dx: (playerX - x) * speed,
+                            dy: (playerY - y) * speed,
+                            health: 30,
+                            type: 'follower'
+                        });
+                        break;
+                    case 1: // Zigzag movement
+                        enemies.push({
+                            element: enemy,
+                            x: x,
+                            y: y,
+                            dx: (playerX - x) * speed * 0.7,
+                            dy: (playerY - y) * speed * 0.7,
+                            health: 25,
+                            type: 'zigzag',
+                            zigzagOffset: 0
+                        });
+                        break;
+                    case 2: // Circular movement around player
+                        enemies.push({
+                            element: enemy,
+                            x: x,
+                            y: y,
+                            dx: 0,
+                            dy: 0,
+                            health: 20,
+                            type: 'circle',
+                            angle: Math.random() * Math.PI * 2,
+                            radius: 100 + Math.random() * 100,
+                            speed: 0.02 + Math.random() * 0.03
+                        });
+                        break;
+                }
+            }
+            
+            function moveEnemies() {
+                for (let i = enemies.length - 1; i >= 0; i--) {
+                    const enemy = enemies[i];
+                    
+                    // Different movement patterns based on type
+                    switch(enemy.type) {
+                        case 'follower':
+                            enemy.x += enemy.dx;
+                            enemy.y += enemy.dy;
+                            break;
+                            
+                        case 'zigzag':
+                            enemy.x += enemy.dx;
+                            enemy.y += enemy.dy;
+                            // Add zigzag movement
+                            enemy.zigzagOffset += 0.1;
+                            enemy.y += Math.sin(enemy.zigzagOffset) * 2;
+                            break;
+                            
+                        case 'circle':
+                            // Calculate position in circle around player
+                            enemy.angle += enemy.speed;
+                            enemy.x = playerX + Math.cos(enemy.angle) * enemy.radius;
+                            enemy.y = playerY + Math.sin(enemy.angle) * enemy.radius;
+                            break;
+                    }
+                    
+                    enemy.element.style.left = enemy.x + 'px';
+                    enemy.element.style.top = enemy.y + 'px';
+                    
+                    // Check if enemy is near player
+                    const distX = Math.abs(enemy.x - playerX);
+                    const distY = Math.abs(enemy.y - playerY);
+                    
+                    if (distX < 40 && distY < 30) {
+                        // Damage player
+                        playerHealth -= 0.5;
+                        updateHealthBar();
+                        
+                        if (playerHealth <= 0) {
+                            gameOver();
+                        }
+                    }
+                }
+            }
+            
+            function spawnTreasure() {
+                const treasure = document.createElement('div');
+                treasure.className = 'treasure';
+                
+                // Random position in the ocean
+                const x = Math.random() * 750;
+                const y = Math.random() * 550;
+                
+                treasure.style.left = x + 'px';
+                treasure.style.top = y + 'px';
+                gameContainer.appendChild(treasure);
+                
+                treasures.push({
+                    element: treasure,
+                    x: x,
+                    y: y
+                });
+            }
+            
+            function checkCollisions() {
+                // Cannonball vs Enemy
+                for (let i = cannonballs.length - 1; i >= 0; i--) {
+                    const ball = cannonballs[i];
+                    
+                    for (let j = enemies.length - 1; j >= 0; j--) {
+                        const enemy = enemies[j];
+                        
+                        const distX = Math.abs(ball.x - enemy.x);
+                        const distY = Math.abs(ball.y - enemy.y);
+                        
+                        if (distX < 25 && distY < 20) {
+                            // Hit enemy
+                            enemy.health -= 10;
+                            
+                            // Remove cannonball
+                            ball.element.remove();
+                            cannonballs.splice(i, 1);
+                            
+                            if (enemy.health <= 0) {
+                                // Remove enemy
+                                enemy.element.remove();
+                                enemies.splice(j, 1);
+                                score += 10;
+                            }
+                            
+                            break;
+                        }
+                    }
+                }
+                
+                // Player vs Treasure
+                for (let i = treasures.length - 1; i >= 0; i--) {
+                    const treasure = treasures[i];
+                    
+                    const distX = Math.abs(playerX - treasure.x);
+                    const distY = Math.abs(playerY - treasure.y);
+                    
+                    if (distX < 40 && distY < 30) {
+                        // Collect treasure
+                        treasure.element.remove();
+                        treasures.splice(i, 1);
+                        score += 20;
+                        
+                        // Heal player
+                        playerHealth = Math.min(100, playerHealth + 10);
+                        updateHealthBar();
+                    }
+                }
+            }
+            
+            function updateHealthBar() {
+                healthFill.style.width = playerHealth + '%';
+                healthFill.style.background = playerHealth > 50 ? 
+                    'linear-gradient(90deg, #ff0000, #00ff00)' : 
+                    'linear-gradient(90deg, #ff0000, #ff0000)';
+            }
+            
+            function gameOver() {
+                gameRunning = false;
+                finalScoreDisplay.textContent = score;
+                gameOverScreen.style.display = 'flex';
+            }
+        });
+    </script>
+</body>
+</html>
